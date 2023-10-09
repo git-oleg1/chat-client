@@ -1,25 +1,33 @@
 <template>
-  <!-- Users list -->
+  <!-- Chats table -->
   <v-main style="display: flex; flex-direction: column;">
     <div class="mx-5 my-5" style="flex: 1">
     <v-sheet border="md" rounded>
       <v-toolbar title="Чаты">
         <v-btn
-        icon="mdi-plus"
-        @click="chatDialogInfo.show = true"
-      ></v-btn>
+          icon="mdi-plus"
+          @click="chatDialogInfo.show = true"
+        ></v-btn>
       </v-toolbar>
       <v-data-table-server
-      v-model:items-per-page="chats.itemsPerPage"
-      :headers="chats.headers"
-      :items-length="chats.totalItems"
-      :items="chats.serverItems"
-      :loading="chats.loading"
-      :search="chats.search"
-      class="elevation-1"
-      item-value="name"
-      @update:options="loadChats"
-    ></v-data-table-server></v-sheet>
+        v-model:items-per-page="chats.itemsPerPage"
+        :headers="chats.headers"
+        :items-length="chats.totalItems"
+        :items="chats.serverItems"
+        :loading="chats.loading"
+        :search="chats.search"
+        class="elevation-1"
+        item-value="name"
+        @update:options="loadChats"
+      >
+        <template v-slot:item="{ item }">
+          <tr>
+            <td>{{ item.name }}</td>
+            <td>{{ dateFormat(item.createdAt) }}</td>
+          </tr>
+        </template>
+      </v-data-table-server>
+    </v-sheet>
   </div>
   </v-main>
 
@@ -93,10 +101,8 @@
 import { reactive, watch } from 'vue';
 import type { CreateChatInfo } from '@/types';
 import { VDataTableServer } from 'vuetify/labs/VDataTable';
-import axios from 'axios';
 import { useSocket } from '@/plugins/socket';
-
-const API_URL = import.meta.env.VITE_API_URL;
+import { format } from 'date-fns';
 
 interface ChatInfo {
   id: number;
@@ -104,11 +110,6 @@ interface ChatInfo {
   email: string;
   password: string;
   createdAt: Date;
-}
-
-interface UsersPage {
-  items: ChatInfo[];
-  total: number;
 }
 
 interface ChatDialogInfo {
@@ -149,6 +150,8 @@ const rules = {
   max50: (value: string) => value.length <= 50 || 'Введите не больше 50 символов',
 }
 
+const dateFormat = (date: Date) => format(date, 'dd.MM.yy HH:mm')
+
 const chats = reactive({
   itemsPerPage: 5,
   headers: [
@@ -156,6 +159,11 @@ const chats = reactive({
       title: 'Название',
       sortable: false,
       key: 'name',
+    },
+    {
+      title: 'Создан',
+      sortable: false,
+      key: 'createdAt',
     },
   ],
   search: '',
